@@ -1,196 +1,112 @@
-USE PizzaDB;
-
 DELIMITER //
 
--- Stored Procedure 1: Calculate and update pizza price and cost
-CREATE PROCEDURE CalculatePizzaPriceAndCost(
-    IN p_pizza_id INT,
-    OUT p_total_price DECIMAL(6,2),
-    OUT p_total_cost DECIMAL(6,2)
+CREATE PROCEDURE AddSingleOrder (
+    IN p_FName VARCHAR(30),            -- Customer first name (optional for dine-in)
+    IN p_LName VARCHAR(30),            -- Customer last name (optional for dine-in)
+    IN p_PhoneNum VARCHAR(30),         -- Customer phone number (optional for dine-in)
+    IN p_OrderType VARCHAR(30),        -- Order type: delivery, dine-in, or pickup
+    IN p_OrderDateTime DATETIME,       -- Date and time of the order
+    IN p_CustPrice DECIMAL(5,2),       -- Total price charged to the customer
+    IN p_BusPrice DECIMAL(5,2),        -- Total business cost for the order
+    IN p_isComplete TINYINT,           -- 1 for complete, 0 for incomplete
+    IN p_HouseNum INT,                 -- Delivery address house number (delivery only)
+    IN p_Street VARCHAR(30),           -- Delivery address street (delivery only)
+    IN p_City VARCHAR(30),             -- Delivery address city (delivery only)
+    IN p_State VARCHAR(2),             -- Delivery address state (delivery only)
+    IN p_Zip INT,                      -- Delivery address zip code (delivery only)
+    IN p_TableNum INT,                 -- Table number (dine-in only)
+    IN p_IsPickedUp TINYINT,           -- 1 if the pickup order is picked up, 0 otherwise
+    IN p_Size VARCHAR(30),             -- Pizza size
+    IN p_Crust VARCHAR(30),            -- Pizza crust type
+    IN p_PizzaPrice DECIMAL(5,2),      -- Pizza price
+    IN p_PizzaCost DECIMAL(5,2),       -- Pizza cost
+    IN p_Toppings TEXT,                -- Comma-separated list of toppings
+    IN p_PizzaDiscounts TEXT,          -- Comma-separated list of pizza discounts
+    IN p_OrderDiscounts TEXT           -- Comma-separated list of order discounts
 )
 BEGIN
-    DECLARE base_price DECIMAL(6,2);
-    DECLARE base_cost DECIMAL(6,2);
-    DECLARE topping_price DECIMAL(6,2) DEFAULT 0;
-    DECLARE topping_cost DECIMAL(6,2) DEFAULT 0;
-    DECLARE discount_amount DECIMAL(6,2) DEFAULT 0;
-    
-    -- Get base price and cost
-    SELECT bp.BasePrice, bp.BaseCost 
-    INTO base_price, base_cost
-    FROM Pizza p
-    JOIN BasePizza bp ON p.BasePizzaID = bp.BasePizzaID
-    WHERE p.PizzaID = p_pizza_id;
-    
-    -- Calculate toppings price and cost
-    SELECT 
-        SUM(CASE WHEN pt.ExtraTopping = 1 THEN t.PricePerUnit * 2 ELSE t.PricePerUnit END),
-        SUM(CASE WHEN pt.ExtraTopping = 1 THEN t.CostPerUnit * 2 ELSE t.CostPerUnit END)
-    INTO topping_price, topping_cost
-    FROM PizzaTopping pt
-    JOIN Topping t ON pt.ToppingID = t.ToppingID
-    WHERE pt.PizzaID = p_pizza_id;
-    
-    -- Calculate discounts
-    SELECT COALESCE(SUM(
-        CASE 
-            WHEN d.PercentOff IS NOT NULL THEN (base_price + COALESCE(topping_price, 0)) * (d.PercentOff/100)
-            ELSE d.DollarOff
-        END
-    ), 0)
-    INTO discount_amount
-    FROM PizzaDiscount pd
-    JOIN Discount d ON pd.DiscountID = d.DiscountID
-    WHERE pd.PizzaID = p_pizza_id;
-    
-    -- Set final price and cost
-    SET p_total_price = base_price + COALESCE(topping_price, 0) - discount_amount;
-    SET p_total_cost = base_cost + COALESCE(topping_cost, 0);
-    
-    -- Update the pizza
-    UPDATE Pizza 
-    SET PizzaPrice = p_total_price, PizzaCost = p_total_cost
-    WHERE PizzaID = p_pizza_id;
-END //
+    -- Declare variables at the start
+    DECLARE customer_id INT;
+    DECLARE pizza_discount_name VARCHAR(30);
+    DECLARE order_discount_name VARCHAR(30);
+    DECLARE current_discount VARCHAR(30);
 
--- Stored Procedure 2: Calculate and update order total
-CREATE PROCEDURE CalculateOrderTotal(
-    IN p_order_id INT
-)
-BEGIN
-    DECLARE order_price DECIMAL(6,2);
-    DECLARE order_cost DECIMAL(6,2);
-    DECLARE order_discount DECIMAL(6,2) DEFAULT 0;
-    
-    -- Sum all pizza prices and costs
-    SELECT SUM(PizzaPrice), SUM(PizzaCost)
-    INTO order_price, order_cost
-    FROM Pizza
-    WHERE OrderID = p_order_id;
-    
-    -- Calculate order level discounts
-    SELECT COALESCE(SUM(
-        CASE 
-            WHEN d.PercentOff IS NOT NULL THEN order_price * (d.PercentOff/100)
-            ELSE d.DollarOff
-        END
-    ), 0)
-    INTO order_discount
-    FROM OrderDiscount od
-    JOIN Discount d ON od.DiscountID = d.DiscountID
-    WHERE od.OrderID = p_order_id;
-    
-    -- Update the order
-    UPDATE Orders 
-    SET OrderPrice = order_price - order_discount,
-        OrderCost = order_cost
-    WHERE OrderID = p_order_id;
-END //
-
--- Function 1: Calculate Pizza Base Price
-CREATE FUNCTION CalculateBasePrice(
-    p_size VARCHAR(10),
-    p_crust_type VARCHAR(20)
-) RETURNS DECIMAL(6,2)
-DETERMINISTIC
-BEGIN
-    DECLARE base_price DECIMAL(6,2);
-    
-    SELECT BasePrice INTO base_price
-    FROM BasePizza
-    WHERE Size = p_size AND CrustType = p_crust_type;
-    
-    RETURN COALESCE(base_price, 0);
-END //
-
--- Function 2: Check if topping inventory is sufficient
-CREATE FUNCTION IsInventorySufficient(
-    p_topping_id INT,
-    p_pizza_size VARCHAR(10),
-    p_is_extra BOOLEAN
-) RETURNS BOOLEAN
-DETERMINISTIC
-BEGIN
-    DECLARE required_units DECIMAL(6,2);
-    DECLARE current_inventory INT;
-    
-    SELECT 
-        CASE p_pizza_size
-            WHEN 'Small' THEN SmallUnits
-            WHEN 'Medium' THEN MediumUnits
-            WHEN 'Large' THEN LargeUnits
-            WHEN 'XLarge' THEN XLargeUnits
-        END * IF(p_is_extra, 2, 1),
-        CurrentInventory
-    INTO required_units, current_inventory
-    FROM Topping
-    WHERE ToppingID = p_topping_id;
-    
-    RETURN current_inventory >= required_units;
-END //
-
--- Trigger 1: Before Insert on PizzaTopping
-CREATE TRIGGER before_pizzatopping_insert
-BEFORE INSERT ON PizzaTopping
-FOR EACH ROW
-BEGIN
-    DECLARE pizza_size VARCHAR(10);
-    
-    -- Get pizza size
-    SELECT bp.Size INTO pizza_size
-    FROM Pizza p
-    JOIN BasePizza bp ON p.BasePizzaID = bp.BasePizzaID
-    WHERE p.PizzaID = NEW.PizzaID;
-    
-    -- Check inventory
-    IF NOT IsInventorySufficient(NEW.ToppingID, pizza_size, NEW.ExtraTopping) THEN
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'Insufficient topping inventory';
+    -- Step 1: Insert Customer (if provided)
+    IF p_FName IS NOT NULL AND p_LName IS NOT NULL THEN
+        SET customer_id = (SELECT customer_CustID FROM customer WHERE customer_FName = p_FName AND customer_LName = p_LName AND customer_PhoneNum = p_PhoneNum);
+        IF customer_id IS NULL THEN
+            INSERT INTO customer (customer_FName, customer_LName, customer_PhoneNum)
+            VALUES (p_FName, p_LName, p_PhoneNum);
+            SET customer_id = LAST_INSERT_ID();
+        END IF;
+    ELSE
+        SET customer_id = NULL;  -- For dine-in orders without customer details
     END IF;
-    
-    -- Update inventory
-    UPDATE Topping
-    SET CurrentInventory = CurrentInventory - (
-        CASE pizza_size
-            WHEN 'Small' THEN SmallUnits
-            WHEN 'Medium' THEN MediumUnits
-            WHEN 'Large' THEN LargeUnits
-            WHEN 'XLarge' THEN XLargeUnits
-        END * IF(NEW.ExtraTopping, 2, 1)
-    )
-    WHERE ToppingID = NEW.ToppingID;
-END //
 
--- Trigger 2: After Insert on Pizza
-CREATE TRIGGER after_pizza_insert
-AFTER INSERT ON Pizza
-FOR EACH ROW
-BEGIN
-    -- Recalculate order totals when a new pizza is added
-    CALL CalculateOrderTotal(NEW.OrderID);
-END //
+    -- Step 2: Insert Order
+    INSERT INTO ordertable (customer_CustID, ordertable_OrderType, ordertable_OrderDateTime, ordertable_CustPrice, ordertable_BusPrice, ordertable_isComplete)
+    VALUES (customer_id, p_OrderType, p_OrderDateTime, p_CustPrice, p_BusPrice, p_isComplete);
+    SET @OrderID = LAST_INSERT_ID();
 
--- Trigger 3: Before Update on Topping
-CREATE TRIGGER before_topping_update
-BEFORE UPDATE ON Topping
-FOR EACH ROW
-BEGIN
-    -- Check if inventory falls below minimum
-    IF NEW.CurrentInventory < NEW.MinimumInventory THEN
-        SET NEW.CurrentInventory = OLD.CurrentInventory;
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'Warning: Topping inventory below minimum level';
+    -- Step 3: Handle Delivery, Dine-in, or Pickup
+    IF p_OrderType = 'delivery' THEN
+        INSERT INTO delivery (ordertable_OrderID, delivery_HouseNum, delivery_Street, delivery_City, delivery_State, delivery_Zip, delivery_IsDelivered)
+        VALUES (@OrderID, p_HouseNum, p_Street, p_City, p_State, p_Zip, 0);
+    ELSEIF p_OrderType = 'dine-in' THEN
+        INSERT INTO dinein (ordertable_OrderID, dinein_TableNum)
+        VALUES (@OrderID, p_TableNum);
+    ELSEIF p_OrderType = 'pickup' THEN
+        INSERT INTO pickup (ordertable_OrderID, pickup_IsPickedUp)
+        VALUES (@OrderID, p_IsPickedUp);
     END IF;
-END //
 
--- Trigger 4: After Update on Pizza
-CREATE TRIGGER after_pizza_update
-AFTER UPDATE ON Pizza
-FOR EACH ROW
-BEGIN
-    -- If price or cost changes, recalculate order totals
-    IF NEW.PizzaPrice != OLD.PizzaPrice OR NEW.PizzaCost != OLD.PizzaCost THEN
-        CALL CalculateOrderTotal(NEW.OrderID);
+    -- Step 4: Insert Pizza
+    INSERT INTO pizza (pizza_Size, pizza_CrustType, pizza_OrderID, pizza_PizzaState, pizza_PizzaDate, pizza_CustPrice, pizza_BusPrice)
+    VALUES (p_Size, p_Crust, @OrderID, 'Completed', p_OrderDateTime, p_PizzaPrice, p_PizzaCost);
+    SET @PizzaID = LAST_INSERT_ID();
+
+    -- Step 5: Add Toppings
+    INSERT INTO pizza_topping (pizza_PizzaID, topping_TopID, pizza_topping_IsDouble)
+    SELECT @PizzaID, topping_TopID, 0  -- Assume single topping by default
+    FROM topping
+    WHERE FIND_IN_SET(topping_TopName, p_Toppings);
+
+    -- Step 6: Apply Pizza Discounts
+    WHILE LOCATE(',', p_PizzaDiscounts) > 0 DO
+        SET pizza_discount_name = SUBSTRING_INDEX(p_PizzaDiscounts, ',', 1);
+        SET p_PizzaDiscounts = SUBSTRING(p_PizzaDiscounts FROM LOCATE(',', p_PizzaDiscounts) + 1);
+
+        INSERT INTO pizza_discount (pizza_PizzaID, discount_DiscountID)
+        SELECT @PizzaID, discount_DiscountID
+        FROM discount
+        WHERE discount_DiscountName = pizza_discount_name;
+    END WHILE;
+
+    -- Handle the last or only pizza discount
+    IF p_PizzaDiscounts IS NOT NULL AND p_PizzaDiscounts != '' THEN
+        INSERT INTO pizza_discount (pizza_PizzaID, discount_DiscountID)
+        SELECT @PizzaID, discount_DiscountID
+        FROM discount
+        WHERE discount_DiscountName = p_PizzaDiscounts;
+    END IF;
+
+    -- Step 7: Apply Order Discounts
+    WHILE LOCATE(',', p_OrderDiscounts) > 0 DO
+        SET order_discount_name = SUBSTRING_INDEX(p_OrderDiscounts, ',', 1);
+        SET p_OrderDiscounts = SUBSTRING(p_OrderDiscounts FROM LOCATE(',', p_OrderDiscounts) + 1);
+
+        INSERT INTO order_discount (ordertable_OrderID, discount_DiscountID)
+        SELECT @OrderID, discount_DiscountID
+        FROM discount
+        WHERE discount_DiscountName = order_discount_name;
+    END WHILE;
+
+    -- Handle the last or only order discount
+    IF p_OrderDiscounts IS NOT NULL AND p_OrderDiscounts != '' THEN
+        INSERT INTO order_discount (ordertable_OrderID, discount_DiscountID)
+        SELECT @OrderID, discount_DiscountID
+        FROM discount
+        WHERE discount_DiscountName = p_OrderDiscounts;
     END IF;
 END //
 

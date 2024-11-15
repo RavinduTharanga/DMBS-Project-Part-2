@@ -16,14 +16,15 @@ SELECT
     pizza_Size,
     pizza_CrustType,
     SUM(pizza_CustPrice - pizza_BusPrice) AS profit,
-    FORMAT(ordertable_OrderDateTime,'%m/%Y') AS OrderMonth
+    DATE_FORMAT(ordertable_OrderDateTime,'%m/%Y') AS OrderMonth
 FROM
     pizza
 JOIN
     ordertable ON pizza.pizza_OrderID = ordertable.ordertable_OrderID
 GROUP BY
     pizza_Size,
-    pizza_CrustType
+    pizza_CrustType,
+    DATE_FORMAT(ordertable_OrderDateTime, '%m/%Y')
 ORDER BY
     profit DESC;
 
