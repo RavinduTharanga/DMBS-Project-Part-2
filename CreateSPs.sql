@@ -123,7 +123,7 @@ BEGIN
     DECLARE min_inventory INT;
 
     -- Get the current and minimum inventory levels
-    SELECT topping_CurINV, topping_MinINV
+    SELECT topping_CurINVT, topping_MinINVT
     INTO cur_inventory, min_inventory
     FROM topping
     WHERE topping_TopName = p_ToppingName;
@@ -224,22 +224,14 @@ DELIMITER ;
 
 DELIMITER //
 
-CREATE TRIGGER UpdateToppingInventory
-AFTER INSERT ON pizza_topping
+CREATE TRIGGER DefOrderType
+BEFORE INSERT ON ordertable
 FOR EACH ROW
-BEGIN
-    IF NEW.pizza_topping_IsDouble = 1 THEN
-        -- Reduce inventory by 2 for double toppings
-        UPDATE topping
-        SET topping_CurINV = topping_CurINV - 2
-        WHERE topping_TopID = NEW.topping_TopID;
-    ELSE
-        -- Reduce inventory by 1 for single topping
-        UPDATE topping
-        SET topping_CurINV = topping_CurINV - 1
-        WHERE topping_TopID = NEW.topping_TopID;
-    END IF;
-END //
+    BEGIN
+        IF NEW.ordertable_OrderType IS NULL THEN
+            SET NEW.ordertable_OrderType = 'dinein';
+        end if;
+    end //
 
 DELIMITER ;
 

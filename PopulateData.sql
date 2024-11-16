@@ -22,12 +22,12 @@ VALUES
 -- Populate Discounts Table
 INSERT INTO discount (discount_DiscountName, discount_Amount, discount_IsPercent)
 VALUES 
-('Employee', NULL, 15), -- 15% discount
+('Employee', 0, 15), -- 15% discount
 ('Lunch Special Medium', 1.00, 0),
 ('Lunch Special Large', 2.00, 0),
 ('Specialty Pizza', 1.50, 0),
-('Happy Hour', NULL, 10), -- 10% discount
-('Gameday Special', NULL, 20); -- 20% discount
+('Happy Hour', 0, 10), -- 10% discount
+('Gameday Special', 0, 20); -- 20% discount
 
 -- Populate Base Prices Table
 INSERT INTO baseprice (baseprice_Size, baseprice_CrustType, baseprice_CustPrice, baseprice_BusPrice)

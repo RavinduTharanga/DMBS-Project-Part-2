@@ -40,7 +40,7 @@ CREATE TABLE customer (
 CREATE TABLE discount (
     discount_DiscountID INT AUTO_INCREMENT,
     discount_DiscountName VARCHAR(30) NOT NULL,
-    discount_Amount DECIMAL(5,2),
+    discount_Amount DECIMAL(5,2) NOT NULL,
     discount_IsPercent TINYINT NOT NULL,
     PRIMARY KEY (discount_DiscountID)
 );
@@ -61,8 +61,8 @@ CREATE TABLE ordertable (
 -- Create pizza table
 CREATE TABLE pizza (
     pizza_PizzaID INT AUTO_INCREMENT,
-    pizza_Size VARCHAR(30) NOT NULL,
     pizza_CrustType VARCHAR(30) NOT NULL,
+    pizza_Size VARCHAR(30) NOT NULL,
     pizza_OrderID INT,
     pizza_PizzaState VARCHAR(30) NOT NULL,
     pizza_PizzaDate DATETIME NOT NULL,
@@ -77,7 +77,7 @@ CREATE TABLE pizza (
 CREATE TABLE pizza_topping (
     pizza_PizzaID INT NOT NULL ,
     topping_TopID INT NOT NULL,
-    pizza_topping_IsDouble INT NOT NULL DEFAULT 0,
+    pizza_topping_IsDouble INT NOT NULL,
     PRIMARY KEY (pizza_PizzaID, topping_TopID),
     FOREIGN KEY (pizza_PizzaID) REFERENCES pizza(pizza_PizzaID),
     FOREIGN KEY (topping_TopID) REFERENCES topping(topping_TopID)
