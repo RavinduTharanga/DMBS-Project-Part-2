@@ -164,7 +164,7 @@ CALL AddSingleOrderWithMultiplePizzas(
     NULL,                     -- No table number
     NULL,                     -- Not a pickup
     'XLarge,XLarge,XLarge,', 'Original,Original,Original',
-    '27.94,31.50,26.75', '9.19,6.25,6.25,8.18',
+    '27.94,31.50,26.75', '9.19,6.25,8.28,8.18',
     'Pepperoni,Sausage;Ham,Pineapple;Chicken,Bacon',
     'NULL,Specialty Pizza,NULL', 'Gameday Special'          -- Discount applied
 );

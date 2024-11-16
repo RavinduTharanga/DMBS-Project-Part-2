@@ -26,7 +26,7 @@ GROUP BY
     pizza_CrustType,
     DATE_FORMAT(ordertable_OrderDateTime, '%m/%Y')
 ORDER BY
-    profit DESC;
+    profit;
 
 CREATE VIEW ProfitByOrderType AS
 SELECT
