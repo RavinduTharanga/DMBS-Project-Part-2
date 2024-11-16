@@ -13,10 +13,10 @@ ORDER BY
 
 CREATE VIEW ProfitByPizza AS
 SELECT
+    pizza_Size AS Size,
     pizza_CrustType AS Crust,
-    DATE_FORMAT(ordertable_OrderDateTime,'%m/%Y') AS OrderMonth,
     SUM(pizza_CustPrice - pizza_BusPrice) AS profit,
-    pizza_Size AS Size
+    DATE_FORMAT(ordertable_OrderDateTime,'%m/%Y') AS OrderMonth
 FROM
     pizza
 JOIN
@@ -30,8 +30,8 @@ ORDER BY
 
 CREATE VIEW ProfitByOrderType AS
 SELECT
-    o.ordertable_OrderType AS customerType,
-    DATE_FORMAT(o.ordertable_OrderDateTime, '%m/%Y') AS OrderMonth,
+    IFNULL(o.ordertable_OrderType, 'Grand Total') AS customerType,
+    IFNULL(DATE_FORMAT(MAX(o.ordertable_OrderDateTime), '%m/%Y'), 'Grand Total') AS OrderMonth,
     SUM(o.ordertable_CustPrice - o.ordertable_BusPrice) AS Profit,
     SUM(o.ordertable_BusPrice) AS TotalOrderPrice,
     SUM(o.ordertable_CustPrice) AS TotalOrderCost
@@ -40,4 +40,7 @@ FROM
 GROUP BY
     o.ordertable_OrderType, DATE_FORMAT(o.ordertable_OrderDateTime, '%m/%Y') WITH ROLLUP
 ORDER BY
-    o.ordertable_OrderType, DATE_FORMAT(o.ordertable_OrderDateTime, '%m/%Y');
+    o.ordertable_OrderType,
+    -- Sort by OrderMonth, ensuring that 'Grand Total' is sorted last
+    IFNULL(DATE_FORMAT(MAX(o.ordertable_OrderDateTime), '%m/%Y'), 'Grand Total') = 'Grand Total',
+    DATE_FORMAT(MAX(o.ordertable_OrderDateTime), '%m/%Y');

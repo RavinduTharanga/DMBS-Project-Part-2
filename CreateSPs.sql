@@ -93,7 +93,7 @@ BEGIN
 
         -- Insert Pizza
         INSERT INTO pizza (pizza_Size, pizza_CrustType, pizza_OrderID, pizza_PizzaState, pizza_PizzaDate, pizza_CustPrice, pizza_BusPrice)
-        VALUES (pizza_size, pizza_crust, @OrderID, 'Completed', p_OrderDateTime, pizza_price, pizza_cost);
+        VALUES (pizza_size, pizza_crust, @OrderID, 'completed', p_OrderDateTime, pizza_price, pizza_cost);
         SET pizza_id = LAST_INSERT_ID();
 
         -- Add Toppings
