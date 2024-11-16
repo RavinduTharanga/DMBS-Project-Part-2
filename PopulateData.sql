@@ -22,12 +22,12 @@ VALUES
 -- Populate Discounts Table
 INSERT INTO discount (discount_DiscountName, discount_Amount, discount_IsPercent)
 VALUES 
-('Employee', 0, 15), -- 15% discount
-('Lunch Special Medium', 1.00, 0),
-('Lunch Special Large', 2.00, 0),
-('Specialty Pizza', 1.50, 0),
-('Happy Hour', 0, 10), -- 10% discount
-('Gameday Special', 0, 20); -- 20% discount
+('Employee', 15, 1.00), -- 15% discount
+('Lunch Special Medium', 10.00, 1.00),
+('Lunch Special Large', 20.00, 1.00),
+('Specialty Pizza', 2, 0),
+('Happy Hour', 1, 0), -- 10% discount
+('Gameday Special', 1.5, 0); -- 20% discount
 
 -- Populate Base Prices Table
 INSERT INTO baseprice (baseprice_Size, baseprice_CrustType, baseprice_CustPrice, baseprice_BusPrice)
@@ -145,7 +145,7 @@ CALL AddSingleOrderWithMultiplePizzas(
     NULL, NULL, NULL, NULL, NULL, -- No delivery address
     NULL,                         -- No table number
     1,                            -- Picked up
-    'Large', 'Original',
+    'Large,Large,Large,Large,Large,Large', 'Original',
     '14.88', '3.30',
     'Regular Cheese,Pepperoni',
     NULL, NULL                          -- No discount
@@ -250,8 +250,8 @@ CALL AddSingleOrderWithMultiplePizzas(
     '8648785679',
     'delivery',
     '2024-04-13 20:32:00',
-    18.00,
-    2.75,
+    31.66,
+    6,
     1,
     8879, 'Suburban', 'Anderson', 'SC', 29621, -- Delivery address
     NULL,                     -- No table number
