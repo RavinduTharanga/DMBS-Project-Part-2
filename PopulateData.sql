@@ -22,12 +22,12 @@ VALUES
 -- Populate Discounts Table
 INSERT INTO discount (discount_DiscountName, discount_Amount, discount_IsPercent)
 VALUES 
-('Employee', 15, 1.00), -- 15% discount
-('Lunch Special Medium', 10.00, 1.00),
-('Lunch Special Large', 20.00, 1.00),
+('Employee', 1.5, 0), -- 15% discount
+('Lunch Special Medium', 1, 0),
+('Lunch Special Large', 2, 0),
 ('Specialty Pizza', 2, 0),
-('Happy Hour', 1, 0), -- 10% discount
-('Gameday Special', 1.5, 0); -- 20% discount
+('Happy Hour', 10, 1), -- 10% discount
+('Gameday Special', 20, 1); -- 20% discount
 
 -- Populate Base Prices Table
 INSERT INTO baseprice (baseprice_Size, baseprice_CrustType, baseprice_CustPrice, baseprice_BusPrice)
@@ -93,7 +93,7 @@ CALL AddSingleOrderWithMultiplePizzas(
     NULL, NULL, NULL, NULL, NULL, -- No delivery address
     21,                           -- Table number for dine-in
     NULL,                         -- Not a pickup
-    'Large', 'Thin',
+    'Large,', 'Thin',
     '19.75', '3.68',
     'Regular Cheese,Pepperoni,Sausage',
     'Lunch Special Large',
@@ -110,7 +110,7 @@ CALL AddSingleOrderWithMultiplePizzas(
     NULL, NULL, NULL, NULL, NULL, -- No delivery address
     4,                            -- Table number for dine-in
     NULL,                         -- Not a pickup
-    'Medium,Small', 'Pan,Original',
+    'Medium,Small,', 'Pan,Original',
     '12.85,6.93', '3.23,1.40',
     'Feta Cheese,Black Olives,Roma Tomatoes,Mushrooms,Banana Peppers;Regular Cheese,Chicken,Banana Peppers',
     'Lunch Special Medium,NULL',        -- Discount applied
@@ -145,7 +145,7 @@ CALL AddSingleOrderWithMultiplePizzas(
     NULL, NULL, NULL, NULL, NULL, -- No delivery address
     NULL,                         -- No table number
     1,                            -- Picked up
-    'Large,Large,Large,Large,Large,Large', 'Original',
+    'Large,Large,Large,Large,Large,Large,', 'Original',
     '14.88', '3.30',
     'Regular Cheese,Pepperoni',
     NULL, NULL                          -- No discount
@@ -163,7 +163,7 @@ CALL AddSingleOrderWithMultiplePizzas(
     115, 'Party Blvd', 'Anderson', 'SC', 29621, -- Delivery address
     NULL,                     -- No table number
     NULL,                     -- Not a pickup
-    'XLarge,XLarge,XLarge', 'Original,Original,Original',
+    'XLarge,XLarge,XLarge,', 'Original,Original,Original',
     '27.94,31.50,26.75', '9.19,6.25,6.25,8.18',
     'Pepperoni,Sausage;Ham,Pineapple;Chicken,Bacon',
     'NULL,Specialty Pizza,NULL', 'Gameday Special'          -- Discount applied
@@ -218,7 +218,7 @@ CALL AddSingleOrderWithMultiplePizzas(
     NULL, NULL, NULL, NULL, NULL, -- No delivery address
     NULL,                         -- No table number
     1,                            -- Picked up
-    'XLarge', 'Gluten-Free',
+    'XLarge,', 'Gluten-Free',
     '27.45', '7.88',
     'Green Pepper,Onion,Roma Tomatoes,Mushrooms,Black Olives,Goat Cheese',
     'Specialty Pizza', NULL             -- Discount applied
@@ -237,7 +237,7 @@ CALL AddSingleOrderWithMultiplePizzas(
     6745, 'Wessex St', 'Anderson', 'SC', 29621, -- Delivery address
     NULL,                     -- No table number
     NULL,                     -- Not a pickup
-    'Large', 'Thin',
+    'Large,', 'Thin',
     25.81, 4.24,
     'Chicken,Green Pepper,Onion,Mushrooms,Four Cheese Blend',
     NULL, NULL                      -- No discount
@@ -256,7 +256,7 @@ CALL AddSingleOrderWithMultiplePizzas(
     8879, 'Suburban', 'Anderson', 'SC', 29621, -- Delivery address
     NULL,                     -- No table number
     NULL,                     -- Not a pickup
-    'Large,Large', 'Thin,Thin',
+    'Large,Large,', 'Thin,Thin',
     '18.00,19.25', '2.75,3.25',
     'Four Cheese Blend;Regular Cheese,Pepperoni',
     'NULL,NULL', 'Employee'                -- Discount applied

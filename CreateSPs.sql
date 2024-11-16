@@ -119,6 +119,8 @@ BEGIN
             FROM discount
             WHERE discount_DiscountName = pizza_discounts;
         END IF;
+
+    -- Check if we have more pizza sizes to process, exit condition
     END WHILE;
 
     -- Apply Order Discounts
@@ -204,75 +206,75 @@ END //
 
 DELIMITER ;
 
--- Update trigger
-
-DELIMITER //
-
-CREATE TRIGGER UpdateInventoryAfterOrder
-AFTER UPDATE ON pizza_topping
-FOR EACH ROW
-BEGIN
-    IF NEW.pizza_topping_IsDouble = 1 THEN
-        UPDATE topping
-        SET topping_CurINVT = topping_CurINVT - 2
-        WHERE topping_TopID = NEW.topping_TopID;
-    ELSE
-        UPDATE topping
-        SET topping_CurINVT = topping_CurINVT - 1
-        WHERE topping_TopID = NEW.topping_TopID;
-    END IF;
-END //
-
-DELIMITER ;
-
-DELIMITER //
-
-CREATE TRIGGER AutoMarkOrderComplete
-AFTER UPDATE ON pizza
-FOR EACH ROW
-BEGIN
-    DECLARE total_pizzas INT;
-    DECLARE completed_pizzas INT;
-
-    -- Count total and completed pizzas for the order
-    SELECT COUNT(*), SUM(pizza_PizzaState = 'Completed')
-    INTO total_pizzas, completed_pizzas
-    FROM pizza
-    WHERE pizza_OrderID = NEW.pizza_OrderID;
-
-    -- Mark the order as complete if all pizzas are completed
-    IF total_pizzas = completed_pizzas THEN
-        UPDATE ordertable
-        SET ordertable_isComplete = 1
-        WHERE ordertable_OrderID = NEW.pizza_OrderID;
-    END IF;
-END //
-
-DELIMITER ;
-
--- insert Trigger
-
-DELIMITER //
-
-CREATE TRIGGER DefOrderType
-BEFORE INSERT ON ordertable
-FOR EACH ROW
-    BEGIN
-        IF NEW.ordertable_OrderType IS NULL THEN
-            SET NEW.ordertable_OrderType = 'dinein';
-        end if;
-    end //
-
-DELIMITER ;
-
-DELIMITER //
-
-CREATE TRIGGER SetOrderIncomplete
-BEFORE INSERT ON ordertable
-FOR EACH ROW
-BEGIN
-    SET NEW.ordertable_isComplete = 0;
-END //
-
-DELIMITER ;
+# -- Update trigger
+#
+# DELIMITER //
+#
+# CREATE TRIGGER UpdateInventoryAfterOrder
+# AFTER UPDATE ON pizza_topping
+# FOR EACH ROW
+# BEGIN
+#     IF NEW.pizza_topping_IsDouble = 1 THEN
+#         UPDATE topping
+#         SET topping_CurINVT = topping_CurINVT - 2
+#         WHERE topping_TopID = NEW.topping_TopID;
+#     ELSE
+#         UPDATE topping
+#         SET topping_CurINVT = topping_CurINVT - 1
+#         WHERE topping_TopID = NEW.topping_TopID;
+#     END IF;
+# END //
+#
+# DELIMITER ;
+#
+# DELIMITER //
+#
+# CREATE TRIGGER AutoMarkOrderComplete
+# AFTER UPDATE ON pizza
+# FOR EACH ROW
+# BEGIN
+#     DECLARE total_pizzas INT;
+#     DECLARE completed_pizzas INT;
+#
+#     -- Count total and completed pizzas for the order
+#     SELECT COUNT(*), SUM(pizza_PizzaState = 'Completed')
+#     INTO total_pizzas, completed_pizzas
+#     FROM pizza
+#     WHERE pizza_OrderID = NEW.pizza_OrderID;
+#
+#     -- Mark the order as complete if all pizzas are completed
+#     IF total_pizzas = completed_pizzas THEN
+#         UPDATE ordertable
+#         SET ordertable_isComplete = 1
+#         WHERE ordertable_OrderID = NEW.pizza_OrderID;
+#     END IF;
+# END //
+#
+# DELIMITER ;
+#
+# -- insert Trigger
+#
+# DELIMITER //
+#
+# CREATE TRIGGER DefOrderType
+# BEFORE INSERT ON ordertable
+# FOR EACH ROW
+#     BEGIN
+#         IF NEW.ordertable_OrderType IS NULL THEN
+#             SET NEW.ordertable_OrderType = 'dinein';
+#         end if;
+#     end //
+#
+# DELIMITER ;
+#
+# DELIMITER //
+#
+# CREATE TRIGGER SetOrderIncomplete
+# BEFORE INSERT ON ordertable
+# FOR EACH ROW
+# BEGIN
+#     SET NEW.ordertable_isComplete = ;
+# END //
+#
+# DELIMITER ;
 
