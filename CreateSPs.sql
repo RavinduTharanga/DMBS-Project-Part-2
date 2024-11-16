@@ -1,6 +1,6 @@
 DELIMITER //
 
-CREATE PROCEDURE AddSingleOrder (
+CREATE PROCEDURE AddSingleOrderWithMultiplePizzas (
     IN p_FName VARCHAR(30),            -- Customer first name (optional for dine-in)
     IN p_LName VARCHAR(30),            -- Customer last name (optional for dine-in)
     IN p_PhoneNum VARCHAR(30),         -- Customer phone number (optional for dine-in)
@@ -16,39 +16,52 @@ CREATE PROCEDURE AddSingleOrder (
     IN p_Zip INT,                      -- Delivery address zip code (delivery only)
     IN p_TableNum INT,                 -- Table number (dine-in only)
     IN p_IsPickedUp TINYINT,           -- 1 if the pickup order is picked up, 0 otherwise
-    IN p_Size VARCHAR(30),             -- Pizza size
-    IN p_Crust VARCHAR(30),            -- Pizza crust type
-    IN p_PizzaPrice DECIMAL(5,2),      -- Pizza price
-    IN p_PizzaCost DECIMAL(5,2),       -- Pizza cost
-    IN p_Toppings TEXT,                -- Comma-separated list of toppings
-    IN p_PizzaDiscounts TEXT,          -- Comma-separated list of pizza discounts
+    IN p_PizzaSizes TEXT,              -- Comma-separated list of pizza sizes
+    IN p_PizzaCrusts TEXT,             -- Comma-separated list of pizza crust types
+    IN p_PizzaPrices TEXT,             -- Comma-separated list of pizza prices
+    IN p_PizzaCosts TEXT,              -- Comma-separated list of pizza costs
+    IN p_ToppingsList TEXT,            -- Comma-separated list of toppings for each pizza
+    IN p_PizzaDiscountsList TEXT,      -- Comma-separated list of discounts for each pizza
     IN p_OrderDiscounts TEXT           -- Comma-separated list of order discounts
 )
 BEGIN
-    -- Declare variables at the start
+    -- Declare variables
     DECLARE customer_id INT;
-    DECLARE pizza_discount_name VARCHAR(30);
-    DECLARE order_discount_name VARCHAR(30);
-    DECLARE current_discount VARCHAR(30);
+    DECLARE pizza_size VARCHAR(30);
+    DECLARE pizza_crust VARCHAR(30);
+    DECLARE pizza_price DECIMAL(5,2);
+    DECLARE pizza_cost DECIMAL(5,2);
+    DECLARE toppings TEXT;
+    DECLARE pizza_discounts TEXT;
+    DECLARE discount_name VARCHAR(30);
+    DECLARE topping_name VARCHAR(30);
+    DECLARE pizza_id INT;
 
-    -- Step 1: Insert Customer (if provided)
+    -- Insert Customer
     IF p_FName IS NOT NULL AND p_LName IS NOT NULL THEN
-        SET customer_id = (SELECT customer_CustID FROM customer WHERE customer_FName = p_FName AND customer_LName = p_LName AND customer_PhoneNum = p_PhoneNum);
+        SELECT customer_CustID
+        INTO customer_id
+        FROM customer
+        WHERE LOWER(customer_FName) = LOWER(p_FName)
+          AND LOWER(customer_LName) = LOWER(p_LName)
+          AND customer_PhoneNum = p_PhoneNum
+        LIMIT 1;
+
         IF customer_id IS NULL THEN
             INSERT INTO customer (customer_FName, customer_LName, customer_PhoneNum)
             VALUES (p_FName, p_LName, p_PhoneNum);
             SET customer_id = LAST_INSERT_ID();
         END IF;
     ELSE
-        SET customer_id = NULL;  -- For dine-in orders without customer details
+        SET customer_id = NULL;
     END IF;
 
-    -- Step 2: Insert Order
+    -- Insert Order
     INSERT INTO ordertable (customer_CustID, ordertable_OrderType, ordertable_OrderDateTime, ordertable_CustPrice, ordertable_BusPrice, ordertable_isComplete)
     VALUES (customer_id, p_OrderType, p_OrderDateTime, p_CustPrice, p_BusPrice, p_isComplete);
     SET @OrderID = LAST_INSERT_ID();
 
-    -- Step 3: Handle Delivery, Dine-in, or Pickup
+    -- Handle Delivery, Dine-in, or Pickup
     IF p_OrderType = 'delivery' THEN
         INSERT INTO delivery (ordertable_OrderID, delivery_HouseNum, delivery_Street, delivery_City, delivery_State, delivery_Zip, delivery_IsDelivered)
         VALUES (@OrderID, p_HouseNum, p_Street, p_City, p_State, p_Zip, 0);
@@ -60,45 +73,62 @@ BEGIN
         VALUES (@OrderID, p_IsPickedUp);
     END IF;
 
-    -- Step 4: Insert Pizza
-    INSERT INTO pizza (pizza_Size, pizza_CrustType, pizza_OrderID, pizza_PizzaState, pizza_PizzaDate, pizza_CustPrice, pizza_BusPrice)
-    VALUES (p_Size, p_Crust, @OrderID, 'Completed', p_OrderDateTime, p_PizzaPrice, p_PizzaCost);
-    SET @PizzaID = LAST_INSERT_ID();
+    -- Handle Pizzas
+    WHILE LOCATE(',', p_PizzaSizes) > 0 DO
+        -- Extract pizza details
+        SET pizza_size = TRIM(SUBSTRING_INDEX(p_PizzaSizes, ',', 1));
+        SET pizza_crust = TRIM(SUBSTRING_INDEX(p_PizzaCrusts, ',', 1));
+        SET pizza_price = TRIM(SUBSTRING_INDEX(p_PizzaPrices, ',', 1));
+        SET pizza_cost = TRIM(SUBSTRING_INDEX(p_PizzaCosts, ',', 1));
+        SET toppings = TRIM(SUBSTRING_INDEX(p_ToppingsList, ',', 1));
+        SET pizza_discounts = TRIM(SUBSTRING_INDEX(p_PizzaDiscountsList, ',', 1));
 
-    -- Step 5: Add Toppings
-    INSERT INTO pizza_topping (pizza_PizzaID, topping_TopID, pizza_topping_IsDouble)
-    SELECT @PizzaID, topping_TopID, 0  -- Assume single topping by default
-    FROM topping
-    WHERE FIND_IN_SET(topping_TopName, p_Toppings);
+        -- Remove the processed details from the lists
+        SET p_PizzaSizes = SUBSTRING(p_PizzaSizes FROM LOCATE(',', p_PizzaSizes) + 1);
+        SET p_PizzaCrusts = SUBSTRING(p_PizzaCrusts FROM LOCATE(',', p_PizzaCrusts) + 1);
+        SET p_PizzaPrices = SUBSTRING(p_PizzaPrices FROM LOCATE(',', p_PizzaPrices) + 1);
+        SET p_PizzaCosts = SUBSTRING(p_PizzaCosts FROM LOCATE(',', p_PizzaCosts) + 1);
+        SET p_ToppingsList = SUBSTRING(p_ToppingsList FROM LOCATE(',', p_ToppingsList) + 1);
+        SET p_PizzaDiscountsList = SUBSTRING(p_PizzaDiscountsList FROM LOCATE(',', p_PizzaDiscountsList) + 1);
 
-    -- Step 6: Apply Pizza Discounts
-    WHILE LOCATE(',', p_PizzaDiscounts) > 0 DO
-        SET pizza_discount_name = SUBSTRING_INDEX(p_PizzaDiscounts, ',', 1);
-        SET p_PizzaDiscounts = SUBSTRING(p_PizzaDiscounts FROM LOCATE(',', p_PizzaDiscounts) + 1);
+        -- Insert Pizza
+        INSERT INTO pizza (pizza_Size, pizza_CrustType, pizza_OrderID, pizza_PizzaState, pizza_PizzaDate, pizza_CustPrice, pizza_BusPrice)
+        VALUES (pizza_size, pizza_crust, @OrderID, 'Completed', p_OrderDateTime, pizza_price, pizza_cost);
+        SET pizza_id = LAST_INSERT_ID();
 
-        INSERT INTO pizza_discount (pizza_PizzaID, discount_DiscountID)
-        SELECT @PizzaID, discount_DiscountID
-        FROM discount
-        WHERE discount_DiscountName = pizza_discount_name;
+        -- Add Toppings
+        INSERT INTO pizza_topping (pizza_PizzaID, topping_TopID, pizza_topping_IsDouble)
+        SELECT pizza_id, topping_TopID, 0
+        FROM topping
+        WHERE FIND_IN_SET(topping_TopName, toppings);
+
+        -- Add Discounts for Pizza
+        WHILE LOCATE(',', pizza_discounts) > 0 DO
+            SET discount_name = TRIM(SUBSTRING_INDEX(pizza_discounts, ',', 1));
+            INSERT INTO pizza_discount (pizza_PizzaID, discount_DiscountID)
+            SELECT pizza_id, discount_DiscountID
+            FROM discount
+            WHERE discount_DiscountName = discount_name;
+            SET pizza_discounts = SUBSTRING(pizza_discounts FROM LOCATE(',', pizza_discounts) + 1);
+        END WHILE;
+
+        -- Handle the last or only pizza discount
+        IF pizza_discounts IS NOT NULL AND pizza_discounts != '' THEN
+            INSERT INTO pizza_discount (pizza_PizzaID, discount_DiscountID)
+            SELECT pizza_id, discount_DiscountID
+            FROM discount
+            WHERE discount_DiscountName = pizza_discounts;
+        END IF;
     END WHILE;
 
-    -- Handle the last or only pizza discount
-    IF p_PizzaDiscounts IS NOT NULL AND p_PizzaDiscounts != '' THEN
-        INSERT INTO pizza_discount (pizza_PizzaID, discount_DiscountID)
-        SELECT @PizzaID, discount_DiscountID
-        FROM discount
-        WHERE discount_DiscountName = p_PizzaDiscounts;
-    END IF;
-
-    -- Step 7: Apply Order Discounts
+    -- Apply Order Discounts
     WHILE LOCATE(',', p_OrderDiscounts) > 0 DO
-        SET order_discount_name = SUBSTRING_INDEX(p_OrderDiscounts, ',', 1);
-        SET p_OrderDiscounts = SUBSTRING(p_OrderDiscounts FROM LOCATE(',', p_OrderDiscounts) + 1);
-
+        SET discount_name = TRIM(SUBSTRING_INDEX(p_OrderDiscounts, ',', 1));
         INSERT INTO order_discount (ordertable_OrderID, discount_DiscountID)
         SELECT @OrderID, discount_DiscountID
         FROM discount
-        WHERE discount_DiscountName = order_discount_name;
+        WHERE discount_DiscountName = discount_name;
+        SET p_OrderDiscounts = SUBSTRING(p_OrderDiscounts FROM LOCATE(',', p_OrderDiscounts) + 1);
     END WHILE;
 
     -- Handle the last or only order discount

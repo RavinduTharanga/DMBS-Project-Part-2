@@ -24,7 +24,7 @@ CREATE TABLE baseprice (
     baseprice_CrustType VARCHAR(30),
     baseprice_CustPrice DECIMAL(5,2) NOT NULL,
     baseprice_BusPrice DECIMAL(5,2) NOT NULL,
-    PRIMARY KEY (baseprice_Size, baseprice_CrustType)
+    PRIMARY KEY (baseprice_CrustType, baseprice_Size)
 );
 
 -- Create customer table
@@ -61,8 +61,8 @@ CREATE TABLE ordertable (
 -- Create pizza table
 CREATE TABLE pizza (
     pizza_PizzaID INT AUTO_INCREMENT,
-    pizza_CrustType VARCHAR(30) NOT NULL,
     pizza_Size VARCHAR(30) NOT NULL,
+    pizza_CrustType VARCHAR(30) NOT NULL,
     pizza_OrderID INT,
     pizza_PizzaState VARCHAR(30) NOT NULL,
     pizza_PizzaDate DATETIME NOT NULL,
@@ -70,7 +70,8 @@ CREATE TABLE pizza (
     pizza_BusPrice DECIMAL(5,2) NOT NULL,
     PRIMARY KEY (pizza_PizzaID),
     FOREIGN KEY (pizza_OrderID) REFERENCES ordertable(ordertable_OrderID),
-    FOREIGN KEY (pizza_Size, pizza_CrustType) REFERENCES baseprice(baseprice_Size, baseprice_CrustType)
+#     FOREIGN KEY (pizza_Size, pizza_CrustType) REFERENCES baseprice(baseprice_Size, baseprice_CrustType)
+    FOREIGN KEY (pizza_CrustType, pizza_Size) REFERENCES baseprice(baseprice_CrustType, baseprice_Size)
 );
 
 -- Create pizza_topping bridge table
