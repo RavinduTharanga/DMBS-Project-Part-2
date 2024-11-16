@@ -15,7 +15,7 @@ CREATE VIEW ProfitByPizza AS
 SELECT
     pizza_Size AS Size,
     pizza_CrustType AS Crust,
-    SUM(pizza_CustPrice - pizza_BusPrice) AS profit,
+    SUM(pizza_CustPrice - pizza_BusPrice) AS Profit,
     DATE_FORMAT(ordertable_OrderDateTime,'%m/%Y') AS OrderMonth
 FROM
     pizza
