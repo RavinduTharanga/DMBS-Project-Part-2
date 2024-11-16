@@ -1,7 +1,7 @@
 CREATE VIEW ToppingPopularity AS
 SELECT
-    topping_TopName,
-    SUM(pizza_topping_isDouble + 1) AS total_amount_used
+    topping_TopName AS Topping,
+    SUM(pizza_topping_isDouble + 1) AS ToppingCount
 FROM
     topping
 JOIN
@@ -9,14 +9,14 @@ JOIN
 GROUP BY
     topping_TopName
 ORDER BY
-    total_amount_used DESC;
+    SUM(pizza_topping_isDouble + 1) DESC;
 
 CREATE VIEW ProfitByPizza AS
 SELECT
-    pizza_Size,
-    pizza_CrustType,
+    pizza_CrustType AS Crust,
+    DATE_FORMAT(ordertable_OrderDateTime,'%m/%Y') AS OrderMonth,
     SUM(pizza_CustPrice - pizza_BusPrice) AS profit,
-    DATE_FORMAT(ordertable_OrderDateTime,'%m/%Y') AS OrderMonth
+    pizza_Size AS Size
 FROM
     pizza
 JOIN
@@ -30,14 +30,14 @@ ORDER BY
 
 CREATE VIEW ProfitByOrderType AS
 SELECT
-    o.ordertable_OrderType AS OrderType,
+    o.ordertable_OrderType AS customerType,
     DATE_FORMAT(o.ordertable_OrderDateTime, '%m/%Y') AS OrderMonth,
+    SUM(o.ordertable_CustPrice - o.ordertable_BusPrice) AS Profit,
     SUM(o.ordertable_BusPrice) AS TotalOrderPrice,
-    SUM(o.ordertable_CustPrice) AS TotalCustomerPrice,
-    SUM(o.ordertable_CustPrice - o.ordertable_BusPrice) AS Profit
+    SUM(o.ordertable_CustPrice) AS TotalOrderCost
 FROM
     ordertable o
 GROUP BY
-    OrderType, OrderMonth WITH ROLLUP
+    o.ordertable_OrderType, DATE_FORMAT(o.ordertable_OrderDateTime, '%m/%Y') WITH ROLLUP
 ORDER BY
-    OrderType, OrderMonth;
+    o.ordertable_OrderType, DATE_FORMAT(o.ordertable_OrderDateTime, '%m/%Y');

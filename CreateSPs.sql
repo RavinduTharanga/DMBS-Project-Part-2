@@ -111,3 +111,146 @@ BEGIN
 END //
 
 DELIMITER ;
+
+DELIMITER //
+
+CREATE PROCEDURE CalculateInventoryStatus(
+    IN p_ToppingName VARCHAR(30),
+    OUT p_Status VARCHAR(50)
+)
+BEGIN
+    DECLARE cur_inventory INT;
+    DECLARE min_inventory INT;
+
+    -- Get the current and minimum inventory levels
+    SELECT topping_CurINV, topping_MinINV
+    INTO cur_inventory, min_inventory
+    FROM topping
+    WHERE topping_TopName = p_ToppingName;
+
+    -- Determine inventory status
+    IF cur_inventory < min_inventory THEN
+        SET p_Status = CONCAT(p_ToppingName, ' is below the required inventory level!');
+    ELSE
+        SET p_Status = CONCAT(p_ToppingName, ' has sufficient inventory.');
+    END IF;
+END //
+
+DELIMITER ;
+
+
+-- Stored Functions
+DELIMITER //
+
+CREATE FUNCTION CalculateOrderCost (
+    p_OrderID INT
+) RETURNS DECIMAL(10,2)
+READS SQL DATA
+BEGIN
+    DECLARE totalCost DECIMAL(10,2);
+    SET totalCost = (
+        SELECT SUM(pizza_CustPrice)
+        FROM pizza
+        WHERE pizza_OrderID = p_OrderID
+    );
+    RETURN totalCost;
+END //
+
+DELIMITER ;
+
+DELIMITER //
+
+CREATE FUNCTION GetCustomerOrderCount(customer_id INT)
+RETURNS INT
+DETERMINISTIC
+BEGIN
+    DECLARE order_count INT;
+    SELECT COUNT(*)
+    INTO order_count
+    FROM ordertable
+    WHERE customer_CustID = customer_id;
+    RETURN order_count;
+END //
+
+DELIMITER ;
+
+-- Update trigger
+
+DELIMITER //
+
+CREATE TRIGGER UpdateInventoryAfterOrder
+AFTER UPDATE ON pizza_topping
+FOR EACH ROW
+BEGIN
+    IF NEW.pizza_topping_IsDouble = 1 THEN
+        UPDATE topping
+        SET topping_CurINVT = topping_CurINVT - 2
+        WHERE topping_TopID = NEW.topping_TopID;
+    ELSE
+        UPDATE topping
+        SET topping_CurINVT = topping_CurINVT - 1
+        WHERE topping_TopID = NEW.topping_TopID;
+    END IF;
+END //
+
+DELIMITER ;
+
+DELIMITER //
+
+CREATE TRIGGER AutoMarkOrderComplete
+AFTER UPDATE ON pizza
+FOR EACH ROW
+BEGIN
+    DECLARE total_pizzas INT;
+    DECLARE completed_pizzas INT;
+
+    -- Count total and completed pizzas for the order
+    SELECT COUNT(*), SUM(pizza_PizzaState = 'Completed')
+    INTO total_pizzas, completed_pizzas
+    FROM pizza
+    WHERE pizza_OrderID = NEW.pizza_OrderID;
+
+    -- Mark the order as complete if all pizzas are completed
+    IF total_pizzas = completed_pizzas THEN
+        UPDATE ordertable
+        SET ordertable_isComplete = 1
+        WHERE ordertable_OrderID = NEW.pizza_OrderID;
+    END IF;
+END //
+
+DELIMITER ;
+
+-- insert Trigger
+
+DELIMITER //
+
+CREATE TRIGGER UpdateToppingInventory
+AFTER INSERT ON pizza_topping
+FOR EACH ROW
+BEGIN
+    IF NEW.pizza_topping_IsDouble = 1 THEN
+        -- Reduce inventory by 2 for double toppings
+        UPDATE topping
+        SET topping_CurINV = topping_CurINV - 2
+        WHERE topping_TopID = NEW.topping_TopID;
+    ELSE
+        -- Reduce inventory by 1 for single topping
+        UPDATE topping
+        SET topping_CurINV = topping_CurINV - 1
+        WHERE topping_TopID = NEW.topping_TopID;
+    END IF;
+END //
+
+DELIMITER ;
+
+DELIMITER //
+
+CREATE TRIGGER SetOrderIncomplete
+BEFORE INSERT ON ordertable
+FOR EACH ROW
+BEGIN
+    SET NEW.ordertable_isComplete = 0;
+END //
+
+DELIMITER ;
+

@@ -13,8 +13,8 @@ CREATE TABLE topping (
     topping_XLAMT DECIMAL(5,2) NOT NULL,
     topping_CustPrice DECIMAL(5,2) NOT NULL,
     topping_BusPrice DECIMAL(5,2) NOT NULL,
-    topping_MinINV INT NOT NULL,
-    topping_CurINV INT NOT NULL,
+    topping_MinINVT INT NOT NULL,
+    topping_CurINVT INT NOT NULL,
     PRIMARY KEY (topping_TopID)
 );
 
@@ -41,7 +41,7 @@ CREATE TABLE discount (
     discount_DiscountID INT AUTO_INCREMENT,
     discount_DiscountName VARCHAR(30) NOT NULL,
     discount_Amount DECIMAL(5,2),
-    discount_IsPercent TINYINT,
+    discount_IsPercent TINYINT NOT NULL,
     PRIMARY KEY (discount_DiscountID)
 );
 
@@ -53,7 +53,7 @@ CREATE TABLE ordertable (
     ordertable_OrderDateTime DATETIME NOT NULL,
     ordertable_CustPrice DECIMAL(5,2) NOT NULL,
     ordertable_BusPrice DECIMAL(5,2) NOT NULL,
-    ordertable_isComplete TINYINT(1) NOT NULL DEFAULT 0,
+    ordertable_IsComplete TINYINT(1) DEFAULT 0,
     PRIMARY KEY (ordertable_OrderID),
     FOREIGN KEY (customer_CustID) REFERENCES customer(customer_CustID)
 );
@@ -75,9 +75,9 @@ CREATE TABLE pizza (
 
 -- Create pizza_topping bridge table
 CREATE TABLE pizza_topping (
-    pizza_PizzaID INT,
-    topping_TopID INT,
-    pizza_topping_IsDouble TINYINT(1) NOT NULL DEFAULT 0,
+    pizza_PizzaID INT NOT NULL ,
+    topping_TopID INT NOT NULL,
+    pizza_topping_IsDouble INT NOT NULL DEFAULT 0,
     PRIMARY KEY (pizza_PizzaID, topping_TopID),
     FOREIGN KEY (pizza_PizzaID) REFERENCES pizza(pizza_PizzaID),
     FOREIGN KEY (topping_TopID) REFERENCES topping(topping_TopID)

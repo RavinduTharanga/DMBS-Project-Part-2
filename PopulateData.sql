@@ -1,5 +1,5 @@
 -- Populate Toppings Table
-INSERT INTO topping (topping_TopName, topping_SmallAMT, topping_MedAMT, topping_LgAMT, topping_XLAMT, topping_CustPrice, topping_BusPrice, topping_MinINV, topping_CurINV)
+INSERT INTO topping (topping_TopName, topping_SmallAMT, topping_MedAMT, topping_LgAMT, topping_XLAMT, topping_CustPrice, topping_BusPrice, topping_MinINVT, topping_CurINVT)
 VALUES 
 ('Pepperoni', 2, 2.75, 3.5, 4.5, 1.25, 0.2, 50, 100),
 ('Sausage', 2.5, 3, 3.5, 4.25, 1.25, 0.15, 50, 100),
@@ -136,7 +136,7 @@ CALL AddSingleOrder(
 CALL AddSingleOrder(
     'Andrew',
     'Wilkes-Krier',
-    '864-254-5861',
+    '8642545861',
     'pickup',
     '2024-03-03 21:30:00',
     89.28, -- Total price for 6 pizzas
@@ -154,7 +154,7 @@ CALL AddSingleOrder(
 CALL AddSingleOrder(
     'Andrew',
     'Wilkes-Krier',
-    '864-254-5861',
+    '8642545861',
     'delivery',
     '2024-04-20 19:11:00',
     27.94,
@@ -172,7 +172,7 @@ CALL AddSingleOrder(
 CALL AddSingleOrder(
     'Andrew',
     'Wilkes-Krier',
-    '864-254-5861',
+    '8642545861',
     'delivery',
     '2024-04-20 19:11:00',
     31.50,
@@ -190,7 +190,7 @@ CALL AddSingleOrder(
 CALL AddSingleOrder(
     'Andrew',
     'Wilkes-Krier',
-    '864-254-5861',
+    '8642545861',
     'delivery',
     '2024-04-20 19:11:00',
     26.75,
@@ -209,7 +209,7 @@ CALL AddSingleOrder(
 CALL AddSingleOrder(
     'Matt',
     'Engers',
-    '864-474-9953',
+    '8644749953',
     'pickup',
     '2024-03-02 17:30:00',
     27.45,
@@ -228,7 +228,7 @@ CALL AddSingleOrder(
 CALL AddSingleOrder(
     'Frank',
     'Turner',
-    '864-232-8944',
+    '8642328944',
     'delivery',
     '2024-03-02 18:17:00',
     25.81,
@@ -247,13 +247,13 @@ CALL AddSingleOrder(
 CALL AddSingleOrder(
     'Milo',
     'Auckerman',
-    '864-878-5679',
+    '8648785679',
     'delivery',
     '2024-04-13 20:32:00',
     18.00,
     2.75,
     1,
-    8879, 'Suburban Home', 'Anderson', 'SC', 29621, -- Delivery address
+    8879, 'Suburban', 'Anderson', 'SC', 29621, -- Delivery address
     NULL,                     -- No table number
     NULL,                     -- Not a pickup
     'Large', 'Thin',
@@ -271,7 +271,7 @@ CALL AddSingleOrder(
     19.25,
     3.25,
     1,
-    8879, 'Suburban Home', 'Anderson', 'SC', 29621, -- Delivery address
+    8879, 'Suburban', 'Anderson', 'SC', 29621, -- Delivery address
     NULL,                     -- No table number
     NULL,                     -- Not a pickup
     'Large', 'Thin',
