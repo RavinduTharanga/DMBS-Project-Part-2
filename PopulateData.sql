@@ -22,10 +22,10 @@ VALUES
 -- Populate Discounts Table
 INSERT INTO discount (discount_DiscountName, discount_Amount, discount_IsPercent)
 VALUES 
-('Employee', 1.5, 0), -- 15% discount
+('Employee', 15, 1), -- 15% discount
 ('Lunch Special Medium', 1, 0),
 ('Lunch Special Large', 2, 0),
-('Specialty Pizza', 2, 0),
+('Specialty Pizza', 1.5, 0),
 ('Happy Hour', 10, 1), -- 10% discount
 ('Gameday Special', 20, 1); -- 20% discount
 
@@ -60,13 +60,13 @@ VALUES
 # -- Example Orders
 # INSERT INTO ordertable (customer_CustID, ordertable_OrderType, ordertable_OrderDateTime, ordertable_CustPrice, ordertable_BusPrice, ordertable_isComplete)
 # VALUES
-# (1, 'dine-in', '2024-03-05 12:03:00', 19.75, 3.68, 1), -- Example completed dine-in order
+# (1, 'dinein ', '2024-03-05 12:03:00', 19.75, 3.68, 1), -- Example completed dinein  order
 # (2, 'pickup', '2024-04-03 12:05:00', 26.25, 4.63, 1), -- Example pickup order
 # (3, 'delivery', '2024-04-20 19:11:00', 86.19, 23.62, 1), -- Example completed delivery order
 # (4, 'delivery', '2024-03-02 17:30:00', 27.45, 7.88, 0); -- Example delivery in progress
 #
 # -- Example Pizzas
-# INSERT INTO pizza (pizza_Size, pizza_CrustType, pizza_OrderID, pizza_PizzaState, pizza_PizzaDate, pizza_CustPrice, pizza_BusPrice)
+# INSERT INTO pizza (pizza_Size, pizza_CrustType, ordertable_OrderID, pizza_PizzaState, pizza_PizzaDate, pizza_CustPrice, pizza_BusPrice)
 # VALUES
 # ('Large', 'Thin', 1, 'Completed', '2024-03-05 12:03:00', 19.75, 3.68),
 # ('Medium', 'Pan', 2, 'Completed', '2024-04-03 12:05:00', 12.85, 3.23),
@@ -84,198 +84,133 @@ VALUES
 # (4, 16, 0); -- Single Goat Cheese on pizza 4
 
 CALL AddSingleOrderWithMultiplePizzas(
-    NULL, NULL, NULL,           -- No customer details for dine-in
-    'dine-in',
-    '2024-03-05 12:03:00',
-    19.75,
-    3.68,
-    1,
-    NULL, NULL, NULL, NULL, NULL, -- No delivery address
-    21,                           -- Table number for dine-in
-    NULL,                         -- Not a pickup
-    'Large,', 'Thin',
-    '19.75', '3.68',
-    'Regular Cheese,Pepperoni,Sausage',
-    'Lunch Special Large',
-    NULL-- Discount applied
+    NULL, NULL, NULL,                -- Customer Info (NULL for dine-in)
+    'dinein',                        -- Order Type
+    '2024-03-05 12:03:00',           -- Order DateTime
+    NULL, NULL, NULL, NULL, NULL,    -- Delivery Address (not needed for dine-in)
+    21,                              -- Table Number
+    NULL,                            -- Is Picked Up (not needed for dine-in)
+    1,                               -- Number of Pizzas
+    'Large',                         -- Pizza Size
+    'Thin',                          -- Pizza Crust
+    'Regular Cheese:1,Pepperoni:0,Sausage:0',-- Pizza Toppings
+    '19.75',                         -- Customer Price
+    '3.68',                          -- Business Price
+    'Lunch Special Large',           -- Pizza Discounts
+    NULL,                            -- Order Discount
+    1                                -- Is Complete
+);
+
+
+CALL AddSingleOrderWithMultiplePizzas(
+    NULL, NULL, NULL,                -- Customer Info (NULL for dine-in)
+    'dinein',                        -- Order Type
+    '2024-04-03 12:05:00',           -- Order DateTime
+    NULL, NULL, NULL, NULL, NULL,    -- Delivery Address (not needed for dine-in)
+    4,                               -- Table Number
+    NULL,                            -- Is Picked Up (not needed for dine-in)
+    2,                               -- Number of Pizzas
+    'Medium,Small',                  -- Pizza Sizes
+    'Pan,Original',                  -- Pizza Crusts
+    'Feta Cheese:0,Black Olives:0,Roma Tomato:0,Mushrooms:0,Banana Peppers:0|' -- Toppings for Pizza 1
+    'Regular Cheese:0,Chicken:0,Banana Peppers:0',                                       -- Toppings for Pizza 2
+    '12.85,6.93',                    -- Customer Prices
+    '3.23,1.40',                     -- Business Prices
+    'Lunch Special Medium,',         -- Pizza Discounts (discount for pizza 1 only)
+    NULL,                            -- Order Discount
+    1                                -- Is Complete
 );
 
 CALL AddSingleOrderWithMultiplePizzas(
-    NULL, NULL, NULL,           -- No customer details for dine-in
-    'dine-in',
-    '2024-04-03 12:05:00',
-    19.78,
-    4.63,
-    1,
-    NULL, NULL, NULL, NULL, NULL, -- No delivery address
-    4,                            -- Table number for dine-in
-    NULL,                         -- Not a pickup
-    'Medium,Small,', 'Pan,Original',
-    '12.85,6.93', '3.23,1.40',
-    'Feta Cheese,Black Olives,Roma Tomatoes,Mushrooms,Banana Peppers;Regular Cheese,Chicken,Banana Peppers',
-    'Lunch Special Medium,NULL',        -- Discount applied
-     'Specialty Pizza,NULL'
+    'Andrew', 'Wilkes-Krier', '864-254-5861', -- Customer Info
+    'pickup',                                -- Order Type
+    '2024-03-03 21:30:00',                   -- Order DateTime
+    NULL, NULL, NULL, NULL, NULL,            -- Delivery Address (not needed for pickup)
+    NULL,                                    -- Table Number
+    0,                                       -- Is Picked Up
+    6,                                       -- Number of Pizzas
+    'Large,Large,Large,Large,Large,Large',   -- Pizza Sizes
+    'Original,Original,Original,Original,Original,Original', -- Pizza Crusts
+    'Regular Cheese:0,Pepperoni:0|Regular Cheese:0,Pepperoni:0|Regular Cheese:0,Pepperoni:0|Regular Cheese:0,Pepperoni:0|Regular Cheese:0,Pepperoni:0|Regular Cheese:0,Pepperoni:0',
+    '14.88,14.88,14.88,14.88,14.88,14.88',   -- Customer Prices
+    '3.30,3.30,3.30,3.30,3.30,3.30',         -- Business Prices
+    NULL,                                    -- Pizza Discounts
+    NULL,                                    -- Order Discount
+    1                                        -- Is Complete
 );
 
-# CALL AddSingleOrderWithMultiplePizzas(
-#     NULL, NULL, NULL,           -- No customer details for dine-in
-#     'dine-in',
-#     '2024-04-03 12:05:00',
-#     6.93,
-#     1.40,
-#     1,
-#     NULL, NULL, NULL, NULL, NULL, -- No delivery address
-#     4,                            -- Table number for dine-in
-#     NULL,                         -- Not a pickup
-#     'Small', 'Original',
-#     6.93, 1.40,
-#     'Regular Cheese,Chicken,Banana Peppers',
-#     NULL, NULL                          -- No discount
-# );
 
 CALL AddSingleOrderWithMultiplePizzas(
-    'Andrew',
-    'Wilkes-Krier',
-    '8642545861',
-    'pickup',
-    '2024-03-03 21:30:00',
-    89.28, -- Total price for 6 pizzas
-    19.80, -- Total cost for 6 pizzas
-    1,
-    NULL, NULL, NULL, NULL, NULL, -- No delivery address
-    NULL,                         -- No table number
-    1,                            -- Picked up
-    'Large,Large,Large,Large,Large,Large,', 'Original',
-    '14.88', '3.30',
-    'Regular Cheese,Pepperoni',
-    NULL, NULL                          -- No discount
+    'Andrew', 'Wilkes-Krier', '864-254-5861', -- Customer Info
+    'delivery',                              -- Order Type
+    '2024-04-20 19:11:00',                   -- Order DateTime
+    115, 'Party Blvd', 'Anderson', 'SC', 29621, -- Delivery Address
+    NULL,                                    -- Table Number
+    NULL,                                    -- Is Picked Up
+    3,                                       -- Number of Pizzas
+    'XLarge,XLarge,XLarge',                  -- Pizza Sizes
+    'Original,Original,Original',            -- Pizza Crusts
+    'Pepperoni:0,Sausage:0|Ham:1,Pineapple:1|Chicken:0,Bacon:0',
+    '27.94,31.50,26.75',                     -- Customer Prices
+    '9.19,6.25,8.18',                        -- Business Prices
+    ',Specialty Pizza,',                     -- Pizza Discounts
+    'Gameday Special',                       -- Order Discount
+    1                                        -- Is Complete
 );
-
-CALL AddSingleOrderWithMultiplePizzas(
-    'Andrew',
-    'Wilkes-Krier',
-    '8642545861',
-    'delivery',
-    '2024-04-20 19:11:00',
-    68.95,
-    23.62,
-    1,
-    115, 'Party Blvd', 'Anderson', 'SC', 29621, -- Delivery address
-    NULL,                     -- No table number
-    NULL,                     -- Not a pickup
-    'XLarge,XLarge,XLarge,', 'Original,Original,Original',
-    '27.94,31.50,26.75', '9.19,6.25,8.18,8.18',
-    'Pepperoni,Sausage;Ham,Pineapple;Chicken,Bacon',
-    'NULL,Specialty Pizza,NULL', 'Gameday Special'          -- Discount applied
-);
-
-# CALL AddSingleOrderWithMultiplePizzas(
-#     'Andrew',
-#     'Wilkes-Krier',
-#     '8642545861',
-#     'delivery',
-#     '2024-04-20 19:11:00',
-#     31.50,
-#     6.25,
-#     1,
-#     115, 'Party Blvd', 'Anderson', 'SC', 29621, -- Delivery address
-#     NULL,                     -- No table number
-#     NULL,                     -- Not a pickup
-#     'XLarge,XLarge', 'Original,Original',
-#     '31.50,26.75', '6.25,8.18',
-#     'Ham,Pineapple;Chicken,Bacon',
-#     'Specialty Pizza,NULL', 'Gameday Special,Gameday Special'        -- Discount applied
-# );
-
-# CALL AddSingleOrderWithMultiplePizzas(
-#     'Andrew',
-#     'Wilkes-Krier',
-#     '8642545861',
-#     'delivery',
-#     '2024-04-20 19:11:00',
-#     26.75,
-#     8.18,
-#     1,
-#     115, 'Party Blvd', 'Anderson', 'SC', 29621, -- Delivery address
-#     NULL,                     -- No table number
-#     NULL,                     -- Not a pickup
-#     'XLarge', 'Original',
-#     26.75, 8.18,
-#     'Chicken,Bacon',
-#     NULL, 'Gameday Special'                      -- No discount
-# );
 
 -- Order 5: March 2nd - Pickup by Matt Engers
 CALL AddSingleOrderWithMultiplePizzas(
-    'Matt',
-    'Engers',
-    '8644749953',
-    'pickup',
-    '2024-03-02 17:30:00',
-    27.45,
-    7.88,
-    1,
-    NULL, NULL, NULL, NULL, NULL, -- No delivery address
-    NULL,                         -- No table number
-    1,                            -- Picked up
-    'XLarge,', 'Gluten-Free',
-    '27.45', '7.88',
-    'Green Pepper,Onion,Roma Tomatoes,Mushrooms,Black Olives,Goat Cheese',
-    'Specialty Pizza', NULL             -- Discount applied
+    'Matt', 'Engers', '864-474-9953',      -- Customer Info
+    'pickup',                             -- Order Type
+    '2024-03-02 17:30:00',                -- Order DateTime
+    NULL, NULL, NULL, NULL, NULL,         -- Delivery Address (not needed for pickup)
+    NULL,                                 -- Table Number
+    0,                                    -- Is Picked Up
+    1,                                    -- Number of Pizzas
+    'XLarge',                             -- Pizza Size
+    'Gluten-Free',                        -- Pizza Crust
+    'Green Pepper:0,Onion:0,Roma Tomato:0,Mushrooms:0,Black Olives:0,Goat Cheese:0',
+    '27.45',                              -- Customer Price
+    '7.88',                               -- Business Price
+    'Specialty Pizza',                    -- Pizza Discount
+    NULL,                                 -- Order Discount
+    1                                     -- Is Complete
 );
 
 -- Order 6: March 2nd - Delivery by Frank Turner
 CALL AddSingleOrderWithMultiplePizzas(
-    'Frank',
-    'Turner',
-    '8642328944',
-    'delivery',
-    '2024-03-02 18:17:00',
-    25.81,
-    4.24,
-    1,
-    6745, 'Wessex St', 'Anderson', 'SC', 29621, -- Delivery address
-    NULL,                     -- No table number
-    NULL,                     -- Not a pickup
-    'Large,', 'Thin',
-    25.81, 4.24,
-    'Chicken,Green Pepper,Onion,Mushrooms,Four Cheese Blend',
-    NULL, NULL                      -- No discount
+    'Frank', 'Turner', '864-232-8944',    -- Customer Info
+    'delivery',                          -- Order Type
+    '2024-03-02 18:17:00',               -- Order DateTime
+    6745, 'Wessex St', 'Anderson', 'SC', 29621, -- Delivery Address
+    NULL,                                -- Table Number
+    NULL,                                -- Is Picked Up
+    1,                                   -- Number of Pizzas
+    'Large',                             -- Pizza Size
+    'Thin',                              -- Pizza Crust
+    'Chicken:0,Green Pepper:0,Onion:0,Mushrooms:0,Four Cheese Blend:1',
+    '25.81',                             -- Customer Price
+    '4.24',                              -- Business Price
+    NULL,                                -- Pizza Discount
+    NULL,                                -- Order Discount
+    1                                    -- Is Complete
 );
 
 -- Order 7: April 13th - Delivery by Milo Auckerman
 CALL AddSingleOrderWithMultiplePizzas(
-    'Milo',
-    'Auckerman',
-    '8648785679',
-    'delivery',
-    '2024-04-13 20:32:00',
-    31.66,
-    6,
-    1,
-    8879, 'Suburban', 'Anderson', 'SC', 29621, -- Delivery address
-    NULL,                     -- No table number
-    NULL,                     -- Not a pickup
-    'Large,Large,', 'Thin,Thin',
-    '18.00,19.25', '2.75,3.25',
-    'Four Cheese Blend;Regular Cheese,Pepperoni',
-    'NULL,NULL', 'Employee'                -- Discount applied
+    'Milo', 'Auckerman', '864-878-5679', -- Customer Info
+    'delivery',                         -- Order Type
+    '2024-04-13 20:32:00',              -- Order DateTime
+    8879, 'Suburban Home', 'Anderson', 'SC', 29621, -- Delivery Address
+    NULL,                               -- Table Number
+    NULL,                               -- Is Picked Up
+    2,                                  -- Number of Pizzas
+    'Large,Large',                      -- Pizza Sizes
+    'Thin,Thin',                        -- Pizza Crusts
+    'Four Cheese Blend:1|Regular Cheese:0,Pepperoni:1', -- Toppings for each pizza
+    '18.00,19.25',                      -- Customer Prices
+    '2.75,3.25',                        -- Business Prices
+    NULL,                               -- Pizza Discounts
+    'Employee Discount',                -- Order Discount
+    1                                   -- Is Complete
 );
-
-# CALL AddSingleOrderWithMultiplePizzas(
-#     'Milo',
-#     'Auckerman',
-#     '8648785679',
-#     'delivery',
-#     '2024-04-13 20:32:00',
-#     19.25,
-#     3.25,
-#     1,
-#     8879, 'Suburban', 'Anderson', 'SC', 29621, -- Delivery address
-#     NULL,                     -- No table number
-#     NULL,                     -- Not a pickup
-#     'Large', 'Thin',
-#     19.25, 3.25,
-#     'Regular Cheese,Pepperoni',
-#     NULL, 'Employee'                -- Discount applied
-# );

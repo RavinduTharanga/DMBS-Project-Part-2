@@ -63,15 +63,17 @@ CREATE TABLE pizza (
     pizza_PizzaID INT AUTO_INCREMENT,
     pizza_Size VARCHAR(30) NOT NULL,
     pizza_CrustType VARCHAR(30) NOT NULL,
-    pizza_OrderID INT,
+    ordertable_OrderID INT,
     pizza_PizzaState VARCHAR(30) NOT NULL,
     pizza_PizzaDate DATETIME NOT NULL,
     pizza_CustPrice DECIMAL(5,2) NOT NULL,
     pizza_BusPrice DECIMAL(5,2) NOT NULL,
     PRIMARY KEY (pizza_PizzaID),
-    FOREIGN KEY (pizza_OrderID) REFERENCES ordertable(ordertable_OrderID),
-#     FOREIGN KEY (pizza_Size, pizza_CrustType) REFERENCES baseprice(baseprice_Size, baseprice_CrustType)
-    FOREIGN KEY (pizza_CrustType, pizza_Size) REFERENCES baseprice(baseprice_CrustType, baseprice_Size)
+    FOREIGN KEY (ordertable_OrderID) REFERENCES ordertable(ordertable_OrderID),
+    FOREIGN KEY (pizza_CrustType, pizza_Size)
+        REFERENCES PizzaDB.baseprice(baseprice_CrustType, baseprice_Size)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
 );
 
 -- Create pizza_topping bridge table
