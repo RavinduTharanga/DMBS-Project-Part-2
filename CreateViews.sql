@@ -9,7 +9,7 @@ LEFT JOIN
 GROUP BY
     topping_TopName
 ORDER BY
-    `ToppingCount` DESC;
+    `ToppingCount` DESC, topping_TopName ASC ;
 
 CREATE VIEW ProfitByPizza AS
 SELECT

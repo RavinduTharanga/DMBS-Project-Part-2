@@ -1,3 +1,5 @@
+USE PizzaDB;
+
 -- Populate Toppings Table
 INSERT INTO topping (topping_TopName, topping_SmallAMT, topping_MedAMT, topping_LgAMT, topping_XLAMT, topping_CustPrice, topping_BusPrice, topping_MinINVT, topping_CurINVT)
 VALUES 
