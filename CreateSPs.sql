@@ -208,7 +208,7 @@ BEGIN
 
         IF customer_id IS NULL THEN
             INSERT INTO customer (customer_FName, customer_LName, customer_PhoneNum)
-            VALUES (customer_FName, customer_LName, p_PhoneNumber);
+            VALUES (p_CustomerFName, p_CustomerLName, p_PhoneNumber);
             SET customer_id = LAST_INSERT_ID();
         END IF;
     ELSE
